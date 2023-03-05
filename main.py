@@ -57,7 +57,7 @@ def main():
         if player_starts:
             is_hit = True
             #player turn
-            print(f"{my_board.player}'s turn starts now'!")
+            print(f"*********** {my_board.player}'s turn starts now'! ***********")
 
             while is_hit: 
                 print(show_hits(my_board, cpu_board))
@@ -68,17 +68,22 @@ def main():
                 if victory_player:
                     break
 
-                print("So far you sank the following boats:")
-                print(f"{cpu_board.get_sunk_boats()}")
-                print("So far the AI sank the following boats on your board:")
-                print(f"{my_board.get_sunk_boats()}")
-
             if victory_player:
-                print(f"Congratulations {my_board.player}, you won!!")
+                pattern = """\/"""
+                string = f"---- Congratulations {my_board.player}, you won!!!! ----"
+                print(show_hits(my_board, cpu_board))
+                print(" You sank all the boats!")
+                print("The Computer only sank these boats:")
+                print(f"{my_board.get_sunk_boats()}\n")
+                print(f"""
+                          {pattern*int(len(string)/2)}
+                          {string}
+                          {pattern*int(len(string)/2)}  
+                            """)                                                                 
                 break
             is_hit = True
             #cpu turn
-            print("The turn of the AI starts now!")
+            print("*********** The turn of the Computer starts now! ***********")
 
             while is_hit: 
                 is_hit = cpu_turn(cpu_board, my_board)
@@ -87,12 +92,22 @@ def main():
                     break
 
             if victory_cpu:
-                print(f"Game Over! The Computer won!!")
+                pattern = """\/"""
+                string = f"---- Game Over! The Computer won!!!! ----"
+                print(show_hits(my_board, cpu_board))
+                print(" The Computer sank all the boats!")
+                print("You only sank these boats:")
+                print(f"{my_board.get_sunk_boats()}\n")
+                print(f"""
+                          {pattern*int(len(string)/2)}
+                          {string}
+                          {pattern*int(len(string)/2)}  
+                            """)
                 break
         else:
             is_hit = True
             #cpu turn
-            print("The turn of the Computer starts now!")
+            print("*********** The turn of the Computer starts now! ***********")
 
             while is_hit: 
                 is_hit = cpu_turn(cpu_board, my_board)
@@ -101,11 +116,22 @@ def main():
                     break
 
             if victory_cpu:
-                print(f"Game Over! The Computer won!!")
+                pattern = """\/"""
+                string = f"---- Game Over! The Computer won!!!! ----"
+                print(show_hits(my_board, cpu_board))
+                print(show_hits(my_board, cpu_board))
+                print(" The Computer sank all the boats!")
+                print("You only sank these boats:")
+                print(f"{my_board.get_sunk_boats()}\n")
+                print(f"""
+                          {pattern*int(len(string)/2)}
+                          {string}
+                          {pattern*int(len(string)/2)}  
+                            """)
                 break
             is_hit = True
             #player turn
-            print(f"{my_board.player}'s turn starts now!")
+            print(f"*********** {my_board.player}'s turn starts now! ***********")
 
             while is_hit: 
                 print(show_hits(my_board, cpu_board))
@@ -115,13 +141,19 @@ def main():
                 victory_player = check_victory(cpu_board)
                 if victory_player:
                     break
-                print("So far you sank the following boats:")
-                print(f"{cpu_board.get_sunk_boats()}")
-                print("So far the AI sank the following boats on your board:")
-                print(f"{my_board.get_sunk_boats()}")
 
             if victory_player:
-                print(f"Congratulations {my_board.player}, you won!!")
+                pattern = """\/"""
+                string = f"---- Congratulations {my_board.player}, you won!!!! ----"
+                print(show_hits(my_board, cpu_board))
+                print(" You sank all the boats!")
+                print("The Computer only sank these boats:")
+                print(f"{my_board.get_sunk_boats()}\n")
+                print(f"""
+                          {pattern*int(len(string)/2)}
+                          {string}
+                          {pattern*int(len(string)/2)}  
+                            """)   
                 break
 
 main()

@@ -149,12 +149,12 @@ def show_hits(my_board : Board, cpu_board : Board):
 
     new_board = np.full((shape[0]*2+3,shape[1]*2 + 4)," "*5)
 
-    indices_not_hit = (3+2*np.where((b==0) | (b==1))[0], shape[1] + 4 + np.where((b==0) | (b==1))[1])
+    indices_not_hit = (3+2*np.where((b==0) | (b==1) | (b==5))[0], shape[1] + 4 + np.where((b==0) | (b==1)| (b==5))[1])
     indices_hit_water = (3+2*np.where(b==2)[0],  shape[1] + 4 + np.where(b==2)[1])
     indices_hit_boat = (3+2*np.where((b==3))[0],  shape[1] + 4 + np.where((b==3))[1])
     indices_hit_sunk = (3+2*np.where((b==4))[0],  shape[1] + 4 + np.where((b==4))[1])
 
-    indices_not_hit_cpu = (3+2*np.where((b_cpu==0) | (b_cpu==1))[0], 2 + np.where((b_cpu==0) | (b_cpu==1))[1])
+    indices_not_hit_cpu = (3+2*np.where((b_cpu==0) | (b_cpu==1) | (b_cpu==5))[0], 2 + np.where((b_cpu==0) | (b_cpu==1) | (b_cpu==5))[1])
     indices_hit_water_cpu = (3+2*np.where(b_cpu==2)[0], 2 + np.where(b_cpu==2)[1])
     indices_hit_boat_cpu = (3+2*np.where((b_cpu==3))[0], 2 + np.where((b_cpu==3))[1])
     indices_hit_sunk_cpu = (3+2*np.where((b_cpu==4))[0], 2 + np.where((b_cpu==4))[1])
@@ -220,6 +220,8 @@ def hit(my_board : Board, enemy_board : Board, coord : tuple):
         True if the boat has been sunk
         False if not
     """
+    import os
+
     b = enemy_board.get_board()
     shape = enemy_board.get_shape()
     is_sunk = False
@@ -318,8 +320,16 @@ def player_turn(my_board : Board, cpu_board : Board):
     1) enemy_board : Board
       The Board object of the computer (enemy)
     """
+    import os
+
     is_hit = None
+    print("So far you sank the following boats:")
+    print(f"{cpu_board.get_sunk_boats()}")
+    print("So far the AI sank the following boats on your board:")
+    print(f"{my_board.get_sunk_boats()}")
+
     while is_hit==None:
+
         str = input(f"""Provide the coordinates where you want to fire in the format x,y.
                     Remember the board size is {BOARD_SIZE}: """)
         if len(str)!=3:
@@ -334,6 +344,8 @@ def player_turn(my_board : Board, cpu_board : Board):
             if x not in range(0,10) or y not in range(0,10):
                 print(f"x and y must be between 0 and 9 included!")
             else:
+                if not (x>=cpu_board.get_shape()[0] or y>=cpu_board.get_shape()[0] or cpu_board.get_board()[x,y] not in [0,1]):
+                    os.system('cls' if os.name == 'nt' else "printf '\033c'")
                 is_hit, _ = hit(my_board, cpu_board,(x,y))    
     return is_hit
 
@@ -357,7 +369,7 @@ def cpu_turn(cpu_board : Board, player_board : Board):
             elif b[z[0],z[1]]==2 or b[z[0],z[1]]==5:
                 hit_water_close.append(z)
 
-        if len(hit_boat_close)==0:
+        if len(hit_boat_close)==0: #I COULD CHANGE THIS TO BE RANDOM
             for elem in neighbours:
                 if elem not in hit_water_close:
                     coord_fire = elem
@@ -366,6 +378,10 @@ def cpu_turn(cpu_board : Board, player_board : Board):
                 # if the other neighbour which is horizontal was water and cpu knows or if the point where I hit
                 # is at the left/right border (y==0 or y==9), then cpu search on the other direction
                 # but same orientation where to fire to sink the boat
+
+                #If I'm at the border search for the new point which is not out of the board
+
+                #if I'm not at the border and I already shot on the water closeby
                 if len(hit_water_close)!=0:
                     if any([z[0]==x for z in hit_water_close]) or y in [0,9]:
                         i=1
@@ -385,10 +401,13 @@ def cpu_turn(cpu_board : Board, player_board : Board):
                             i+=1 
                 #if cpu didn't hit yet on the other neighbour that is horizontal, 
                 # and it is not out of border hit there
-                else :
+                else:
                     i=1
                     while True:
-                        coord_fire = (x, y + (y-hit_boat_close[0][1])*i)
+                        if y not in [0,9]:
+                            coord_fire = (x, y + (y-hit_boat_close[0][1])*i)
+                        else:
+                            coord_fire = (x, y - (y-hit_boat_close[0][1])*i)
                         if b[coord_fire[0],coord_fire[1]]!=3:
                             break
                         i+=1  
@@ -416,7 +435,10 @@ def cpu_turn(cpu_board : Board, player_board : Board):
                 else:
                     i=1
                     while True:
-                        coord_fire = (x + (x-hit_boat_close[0][0])*i, y)
+                        if x not in [0,9]:
+                            coord_fire = (x + (x-hit_boat_close[0][0])*i, y)
+                        else:
+                            coord_fire = (x - (x-hit_boat_close[0][0])*i, y)
                         if b[coord_fire[0],coord_fire[1]]!=3:
                             break
                         i+=1  
@@ -449,6 +471,6 @@ def cpu_turn(cpu_board : Board, player_board : Board):
         elif orientation==0: #vertical
             coord_head = (coord_fire[0] - pos, coord_fire[1])
             coord_tail = (coord_fire[0] - pos + dim_boat, coord_fire[1])
-        player_board.set_mask(coord_head, coord_tail, orientation, 5)
+        player_board.set_mask(coord_head, coord_tail, orientation, 5, exception=2)
 
     return is_hit

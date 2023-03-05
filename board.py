@@ -94,9 +94,16 @@ class Board:
         self.boats = boats.copy()
         self.sunk_boats = {key : 0 for key in boats}
 
-        for boat, num in boats.items():
-            for j in range(num):
-                self.set_boat(boat)
+        flag = []
+        #I put this while because sometimes (very rare) there is no space for the last boat
+        #So if that's the case, it will reconstruct the board from zero again
+        while True:
+            self.clear_board()
+            for boat, num in boats.items():
+                for j in range(num):
+                    flag.append(self.set_boat(boat))
+            if all(flag)==True:
+                break
         #reset the boats in the dictionary
         self.boats = boats.copy()
         self.polish_board()
@@ -110,7 +117,10 @@ class Board:
         Inputs:
         1) dim_boat : int
             dimension of the boat you want to place
-
+        Output:
+        1) bool
+            True if it was possible to set the boat
+            False if it was not possible to set the boat
         """
         flag = True
         if dim_boat not in self.boats:
@@ -148,10 +158,11 @@ class Board:
                     flag = False
             counter +=1
         if counter >=200:
-            print(f"I was not able to")
+            return False
+        return True
 
 
-    def set_mask(self, coord1, coord2, is_horizontal, value):
+    def set_mask(self, coord1, coord2, is_horizontal, value, exception=None):
         """
         take the position of the boat which goes from coord1 to coord2, and set
         all the cells around the boat equal to value
@@ -165,6 +176,9 @@ class Board:
             True : horizontal , False : vertical
         4) value : int
             The value you want to set in the mask
+        5) exception: int
+            Optional value you don't want to print on with the mask
+
         """
         #pad the matrix:
         new_board = np.zeros((self.xdim+2, self.ydim+2))
@@ -173,16 +187,38 @@ class Board:
         coord1 = [c+1 for c in coord1]
         coord2 = [c+1 for c in coord2]
 
+        coords = [(1,7),(1,4)]
+        for i in range(4,7+1):
+            coords.append((1-1,i))
+            coords.append((1+1,i))
+
         if is_horizontal: #horizontal
-            new_board[coord1[0],coord1[1]-1] = value
-            new_board[coord2[0],coord2[1]] = value
-            new_board[coord1[0]-1, coord1[1]-1:coord2[1]+1] = value
-            new_board[coord1[0]+1, coord1[1]-1:coord2[1]+1] = value
+            coords = [(coord1[0], coord1[1]-1), (coord2[0], coord2[1])]
+            for i in range(coord1[1]-1,coord2[1]+1):
+                coords.append((coord1[0]-1, i))
+                coords.append((coord1[0]+1, i))
+
+            for coord in coords:
+                if new_board[coord[0], coord[1]]!=exception:
+                    new_board[coord[0], coord[1]] = value
+
+            #new_board[coord1[0],coord1[1]-1] = value
+            #new_board[coord2[0],coord2[1]] = value
+            #new_board[coord1[0]-1, coord1[1]-1:coord2[1]+1] = value
+            #new_board[coord1[0]+1, coord1[1]-1:coord2[1]+1] = value
         else:
-            new_board[coord1[0]-1,coord1[1]] = value
-            new_board[coord2[0],coord1[1]] = value
-            new_board[coord1[0]-1:coord2[0]+1, coord1[1]-1] = value
-            new_board[coord1[0]-1:coord2[0]+1, coord1[1]+1] = value
+            coords = [(coord1[0]-1, coord1[1]), (coord2[0], coord1[1])]
+            for i in range(coord1[0]-1,coord2[0]+1):
+                coords.append((i, coord1[1]-1))
+                coords.append((i, coord1[1]+1))
+            for coord in coords:
+                if new_board[coord[0], coord[1]]!=exception:
+                    new_board[coord[0], coord[1]] = value
+
+            #new_board[coord1[0]-1,coord1[1]] = value
+            #new_board[coord2[0],coord1[1]] = value
+            #new_board[coord1[0]-1:coord2[0]+1, coord1[1]-1] = value
+            #new_board[coord1[0]-1:coord2[0]+1, coord1[1]+1] = value
 
         #delete padding
         self.board = new_board[1:-1,1:-1]
@@ -194,7 +230,12 @@ class Board:
         self.board[np.where((self.board!=0) & (self.board!=1))] = 0
         #print(f"The board for player {self.player} is ready")
 
-    
+    def clear_board(self):
+        """
+        Set to 0 all the board
+        """
+        self.board =np.zeros((self.xdim, self.ydim))
+
     def get_board(self):
         """
         Return the board
