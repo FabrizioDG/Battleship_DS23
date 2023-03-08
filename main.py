@@ -7,10 +7,11 @@ from constants import *
 
 def main():
     welcome()
-    name = input("Set the name for the player: ")
+    name = input("Set the name for the player: ").strip()
     print(f"Welcome {name} to this Battleship game!")
-    rule = input("Do you want me to remind you the rules? ('yes' or 'no'): ")
+
     while True:
+        rule = input("Do you want me to remind you the rules? ('yes' or 'no'): ").strip()
         if rule.lower() =='yes':
             playing = show_rules()
             break
@@ -42,7 +43,7 @@ def main():
     coin_dict = {0 : "head", 1 : "tail"}
     player_starts = False
     while True:
-        coin = input("Choose head or tail: ")
+        coin = input("Choose head or tail: ").strip()
         if coin.lower() not in ["head", "tail"]:
             print(f"You must write either 'head' or 'tail' but you wrote {coin}")
         else:

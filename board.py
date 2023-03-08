@@ -37,21 +37,25 @@ class Board:
                         2 -> hit on water
                         3 -> hit on boat
                         4 -> boat sunk
-    3) self.board_boats : numpy matrix with integers
+    3) self.board_boats : numpy matrix with tuple of integers
         This boat is to save what type of boat there is in each coordinate
-                        0 -> water (no boat)
-                        1 -> 1-dim boat
-                        2 -> 2-dim boat
-                        3 -> 3-dim boat
-                        4 -> 4-dim boat
+                        Tuple: (0,0,0) -> water
+                               (dim_boat, H/V, position)
+                        where: dim_boat: dimension of the boat
+                               H/V : orientation Horizontal/Vertical
+                               position: which relative position with the head of the boat
+                                         head -> 0
+                                         tail -> dim_boat-1
+                            
     3) self.xdim : int
         board first dimension (vertical)
     4) self.ydim : int
         board second dimension (horizontal)
     5) self.boats : dict
-        a dictionary with (keys = dimension of the boat, values = how many boats at start)
+        (keys = boat dim, values = how many boats at start)
     6) self.sunk_boats : dict
-        a dictionary with (keys = dimension of the boat, values = how many sunk boats)
+        (keys = boat dim, values = how many sunk boats)
+
     Methods:
 
     1) __init__(self, player : string, board_size : tuple, boats : dict) -> None
@@ -59,17 +63,19 @@ class Board:
     2) set_boat (self, dim_boat : int) -> None
         set a boat of dimension dim_boat with random orientation in a random spot of the board
         without touching other boats
-    3) set_mask(self, coord1 : tuple, coord2 : tuple, is_horizontal : bool, value : int) -> None
+    3) set_mask(self, coord1 : tuple, coord2 : tuple, is_horizontal : bool, value : int, *exceptions) -> None
         take the position of the boat which goes from coord1 to coord2, and set
-        all the cells around the boat equal to value
+        all the cells around the boat equal to value, except if the value is exceptions
     4) polish_board(self) -> None
-        Set to 0  all the values in the initial board which are not 0 or 1. Print that the board is ready.
+        Set to 0 all the values in the initial board which are not 0 or 1.
     5) get_board(self) -> numpy matrix
         Return the board
     6) get_board_boats(self) -> numpy matrix
         Return the board with the dimensions of the boats
     7) get_sunk_boats(self) -> dict
         Return the dictionary with the sunk boats
+    8) add_sunk_boat(self, dim_boat : int)
+       Add one sunk boat
     8) get_shape(self) -> tuple of int
         Return (self.xdim, self.ydim) 
     """
@@ -98,12 +104,15 @@ class Board:
         #I put this while because sometimes (very rare) there is no space for the last boat
         #So if that's the case, it will reconstruct the board from zero again
         while True:
-            self.clear_board()
             for boat, num in boats.items():
                 for j in range(num):
                     flag.append(self.set_boat(boat))
             if all(flag)==True:
                 break
+            #If he cannot put all the boats redo it from zero 
+            self.boats = boats.copy()
+            self.clear_board()
+
         #reset the boats in the dictionary
         self.boats = boats.copy()
         self.polish_board()
@@ -186,12 +195,6 @@ class Board:
         #add one to coordinates
         coord1 = [c+1 for c in coord1]
         coord2 = [c+1 for c in coord2]
-
-        coords = [(1,7),(1,4)]
-        for i in range(4,7+1):
-            coords.append((1-1,i))
-            coords.append((1+1,i))
-
         if is_horizontal: #horizontal
             coords = [(coord1[0], coord1[1]-1), (coord2[0], coord2[1])]
             for i in range(coord1[1]-1,coord2[1]+1):
@@ -201,11 +204,6 @@ class Board:
             for coord in coords:
                 if new_board[coord[0], coord[1]]!=exception:
                     new_board[coord[0], coord[1]] = value
-
-            #new_board[coord1[0],coord1[1]-1] = value
-            #new_board[coord2[0],coord2[1]] = value
-            #new_board[coord1[0]-1, coord1[1]-1:coord2[1]+1] = value
-            #new_board[coord1[0]+1, coord1[1]-1:coord2[1]+1] = value
         else:
             coords = [(coord1[0]-1, coord1[1]), (coord2[0], coord1[1])]
             for i in range(coord1[0]-1,coord2[0]+1):
@@ -214,11 +212,6 @@ class Board:
             for coord in coords:
                 if new_board[coord[0], coord[1]]!=exception:
                     new_board[coord[0], coord[1]] = value
-
-            #new_board[coord1[0]-1,coord1[1]] = value
-            #new_board[coord2[0],coord1[1]] = value
-            #new_board[coord1[0]-1:coord2[0]+1, coord1[1]-1] = value
-            #new_board[coord1[0]-1:coord2[0]+1, coord1[1]+1] = value
 
         #delete padding
         self.board = new_board[1:-1,1:-1]

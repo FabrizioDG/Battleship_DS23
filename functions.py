@@ -75,7 +75,7 @@ def show_rules():
 
     for s in string:
         print(s,end="", flush=True)
-        time.sleep(0.03)
+        time.sleep(0.02)
     while True:
         ready = input("Are you ready to play? ('yes' or 'no'): ")
         if ready.lower()=='yes':
@@ -221,6 +221,7 @@ def hit(my_board : Board, enemy_board : Board, coord : tuple):
         False if not
     """
     import os
+    import time
 
     b = enemy_board.get_board()
     shape = enemy_board.get_shape()
@@ -233,12 +234,15 @@ def hit(my_board : Board, enemy_board : Board, coord : tuple):
         return None, None
     elif b[coord[0],coord[1]] == 0:
         print(f"{my_board.player} attack hit the water at the point {coord}")
+        time.sleep(1.5)
         b[coord[0],coord[1]] = 2
         return False, is_sunk
     elif b[coord[0],coord[1]] == 1:
         print(f"{my_board.player} hit a boat at the point {coord}")
         b[coord[0],coord[1]] = 3
         is_sunk = check_if_sunk(my_board, enemy_board, coord)
+        time.sleep(1.5)
+
         return True, is_sunk
     
 
@@ -264,11 +268,10 @@ def check_if_sunk(my_board : Board, enemy_board : Board, coord : tuple):
     dim_boat = b_boats[coord[0],coord[1]][0]
     orientation = b_boats[coord[0],coord[1]][1]
     index_pos = b_boats[coord[0],coord[1]][2]
-    shape = enemy_board.get_shape()
+    #shape = enemy_board.get_shape()
     boat_coords = []
     #I call this function only if I hit a boat. If there are no '1' closeby it means the boat is sunk
     
-
     if dim_boat==1: #1-dim boat is sunk for sure
         sunk = True
         enemy_board.add_sunk_boat(dim_boat)
@@ -319,6 +322,10 @@ def player_turn(my_board : Board, cpu_board : Board):
        the player board
     1) enemy_board : Board
       The Board object of the computer (enemy)
+    Outputs:
+    1) is_hit : bool
+        True if boat was hit
+        False if boat was not hit
     """
     import os
 
@@ -331,7 +338,7 @@ def player_turn(my_board : Board, cpu_board : Board):
     while is_hit==None:
 
         str = input(f"""Provide the coordinates where you want to fire in the format x,y.
-                    Remember the board size is {BOARD_SIZE}: """)
+                    Remember the board size is {BOARD_SIZE}: """).strip()
         if len(str)!=3:
             print(f"You wrote {str}, you should write x,y where x,y are between 0 and 9 included")            
         else:
@@ -351,7 +358,18 @@ def player_turn(my_board : Board, cpu_board : Board):
 
 def cpu_turn(cpu_board : Board, player_board : Board):
     """
-    
+    Function for the turn of the cpu.
+    CPU hits randomly, unless there is a boat hit. In that case it hits closeby to try to sink it. 
+    Moreover the CPU won't hit closeby a sunk boat, as there cannot be boats there.
+    Inputs:
+    1) cpu_board : Board
+       the cpu board
+    1) player_board : Board
+      The Board object of the player
+    Outputs:
+    1) is_hit : bool
+        True if boat was hit
+        False if boat was not hit
     """
     b = player_board.get_board()
 
@@ -378,8 +396,6 @@ def cpu_turn(cpu_board : Board, player_board : Board):
                 # if the other neighbour which is horizontal was water and cpu knows or if the point where I hit
                 # is at the left/right border (y==0 or y==9), then cpu search on the other direction
                 # but same orientation where to fire to sink the boat
-
-                #If I'm at the border search for the new point which is not out of the board
 
                 #if I'm not at the border and I already shot on the water closeby
                 if len(hit_water_close)!=0:
